@@ -130,7 +130,6 @@
   /* ── Scan line — 1px horizontal sweep ── */
   .scan-line {
     position: relative;
-    overflow: hidden;
   }
   .scan-line::after {
     content: "";
