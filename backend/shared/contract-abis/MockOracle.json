@@ -1,0 +1,44 @@
+[
+  {
+    "type": "function",
+    "name": "pushReading",
+    "inputs": [
+      { "name": "locationId", "type": "uint256" },
+      { "name": "rainfall", "type": "int64" },
+      { "name": "riverLevel", "type": "int64" },
+      { "name": "soilMoisture", "type": "int64" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "latestReading",
+    "inputs": [{ "name": "locationId", "type": "uint256" }],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "components": [
+          { "name": "locationId", "type": "uint256" },
+          { "name": "rainfall", "type": "int64" },
+          { "name": "riverLevel", "type": "int64" },
+          { "name": "soilMoisture", "type": "int64" },
+          { "name": "timestamp", "type": "uint256" }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "event",
+    "name": "ReadingPushed",
+    "inputs": [
+      { "name": "locationId", "type": "uint256", "indexed": true },
+      { "name": "rainfall", "type": "int64", "indexed": false },
+      { "name": "riverLevel", "type": "int64", "indexed": false },
+      { "name": "soilMoisture", "type": "int64", "indexed": false },
+      { "name": "timestamp", "type": "uint256", "indexed": false }
+    ]
+  }
+]

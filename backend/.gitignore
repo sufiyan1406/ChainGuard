@@ -1,0 +1,25 @@
+# Node
+node_modules/
+package-lock.json
+
+# Foundry / Solidity
+cache/
+out/
+broadcast/
+
+# Rust / Stylus
+target/
+**/*.rs.bk
+Cargo.lock
+
+# Environment & Secrets
+.env
+.env.local
+*.pem
+*.key
+
+# Editor & OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

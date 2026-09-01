@@ -1,0 +1,26 @@
+[
+  {
+    "type": "function",
+    "name": "calculateRiskScore",
+    "inputs": [
+      { "name": "signals", "type": "int64[]" },
+      { "name": "weights", "type": "uint8[]" }
+    ],
+    "outputs": [{ "name": "riskScore", "type": "uint32" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "shouldTriggerPayout",
+    "inputs": [{ "name": "policyId", "type": "uint256" }],
+    "outputs": [{ "name": "", "type": "bool" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "pricePremium",
+    "inputs": [{ "name": "locationId", "type": "uint256" }],
+    "outputs": [{ "name": "", "type": "uint256" }],
+    "stateMutability": "view"
+  }
+]

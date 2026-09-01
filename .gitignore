@@ -12,6 +12,10 @@ build/
 .vercel/
 .cache/
 *.tsbuildinfo
+backend/**/target/
+backend/**/artifacts/
+backend/**/cache/
+backend/**/typechain-types/
 
 # Tooling & Metadata
 .grok/

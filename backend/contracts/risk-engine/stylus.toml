@@ -1,0 +1,3 @@
+# Stylus Risk Engine Configuration
+[wasm]
+name = "risk_engine"
