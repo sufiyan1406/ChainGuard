@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+.node_modules.lock
+
+# Build & Output
+dist/
+build/
+.output/
+.nitro/
+.vercel/
+.cache/
+*.tsbuildinfo
+
+# Tooling & Metadata
+.grok/
+
+# Environment variables & local secrets
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Testing & Coverage
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+
+# Editor & OS files
+.DS_Store
+Thumbs.db
+*.pem
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

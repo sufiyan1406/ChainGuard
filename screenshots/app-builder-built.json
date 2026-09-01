@@ -1,0 +1,38 @@
+{
+  "url": "http://127.0.0.1:8081/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "ChainGuard",
+      "hasCanvas": false,
+      "bodyTextLen": 1808,
+      "bodyTextHash": "fcd095a10ef2346db6bbeb3798041d3df94b643601fb4accdab1b0545f89f120",
+      "bodyTextPrefix": "CHAINGUARD --:-- / Sepolia 421614 Cover Policies Protocol Mock L",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-built.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "ChainGuard",
+      "hasCanvas": false,
+      "bodyTextLen": 1716,
+      "bodyTextHash": "ce684f950e804bf800d488fd3e1fd64eb2606d53f62ca2ac4a3b555c585bfe65",
+      "bodyTextPrefix": "CHAINGUARD Connect demo Cover Policies Protocol PARAMETRIC FLOOD",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-built-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-built.json",
+  "divergesFromBaseline": false,
+  "baselineReasons": []
+}
