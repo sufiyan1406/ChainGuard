@@ -242,5 +242,5 @@ Built with precision for the **Arbitrum Stylus Hackathon**.
 * **Web3 Connectivity**: Viem, Wagmi & Privy
 
 <div align="center">
-  <sub>ChainGuard © 2026. Distributed under the MIT License.</sub>
+  <sub>ChainGuard © 2026.</sub>
 </div>
