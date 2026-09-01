@@ -64,15 +64,23 @@ export function useWallet() {
       connectDemoWallet();
       return;
     }
-    if (privy.hasPrivy) {
-      privy.login();
-      return;
-    }
     if (injected) {
-      await connectAsync({ connector: injected });
-      return;
+      try {
+        await connectAsync({ connector: injected });
+        return;
+      } catch (err) {
+        console.warn("Wagmi injected connect error:", err);
+      }
     }
-    throw new Error("No wallet found. Install MetaMask or set NEXT_PUBLIC_PRIVY_APP_ID in .env.local.");
+    if (privy.hasPrivy) {
+      try {
+        privy.login();
+        return;
+      } catch (err) {
+        console.warn("Privy login error:", err);
+      }
+    }
+    throw new Error("No wallet found. Install MetaMask or switch to Mock mode.");
   }, [mock, privy, injected, connectAsync]);
 
   const disconnect = useCallback(async () => {
