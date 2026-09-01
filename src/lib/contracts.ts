@@ -405,6 +405,101 @@ export function getDemoBalance(): bigint {
   return getMockState().balance;
 }
 
+export async function checkAndPayout(
+  policyId: bigint,
+  helpers?: {
+    walletClient?: {
+      account: Address;
+      writeContract: (args: Record<string, unknown>) => Promise<Hex>;
+    };
+  },
+): Promise<{ txHash: Hex; amount: bigint; riskScore: number }> {
+  if (isMockMode()) {
+    simulatePayout(policyId);
+    return { txHash: "0xmocktx", amount: 100000000000000000n, riskScore: 8500 };
+  }
+  if (!ADDRESSES.insurancePool) {
+    throw new ChainGuardError("Insurance pool address is not configured.");
+  }
+  if (!helpers?.walletClient) {
+    throw new ChainGuardError("Connect a wallet to continue.", "WalletNotConnected");
+  }
+  try {
+    const hash = await helpers.walletClient.writeContract({
+      address: ADDRESSES.insurancePool,
+      abi: insurancePoolAbi,
+      functionName: "checkAndPayout",
+      args: [policyId],
+      account: helpers.walletClient.account,
+      chain: { id: CHAIN_ID },
+    });
+    const receipt = await getClient().waitForTransactionReceipt({ hash });
+    let amount = 0n;
+    let riskScore = 8500;
+    for (const log of receipt.logs) {
+      try {
+        const decoded = decodeEventLog({
+          abi: insurancePoolAbi,
+          data: log.data,
+          topics: log.topics,
+        });
+        if (decoded.eventName === "PayoutTriggered") {
+          amount = decoded.args.amount as bigint;
+          riskScore = Number(decoded.args.riskScore ?? 8500);
+        }
+      } catch {
+        /* skip unrelated logs */
+      }
+    }
+    notify();
+    return { txHash: hash, amount, riskScore };
+  } catch (error) {
+    const decoded = decodeContractError(error);
+    throw new ChainGuardError(decoded.message, decoded.code);
+  }
+}
+
+export async function pushOracleReading(
+  locationId: bigint,
+  rainfall: bigint,
+  riverLevel: bigint,
+  soilMoisture: bigint,
+  helpers?: {
+    walletClient?: {
+      account: Address;
+      writeContract: (args: Record<string, unknown>) => Promise<Hex>;
+    };
+  },
+): Promise<{ txHash: Hex }> {
+  if (isMockMode()) {
+    const score = rainfall >= 25000n ? 100 : rainfall >= 12000n ? 50 : 0;
+    simulateFlood(locationId, score);
+    return { txHash: "0xmocktx" };
+  }
+  if (!ADDRESSES.mockOracle) {
+    throw new ChainGuardError("Mock oracle address is not configured.");
+  }
+  if (!helpers?.walletClient) {
+    throw new ChainGuardError("Connect a wallet to continue.", "WalletNotConnected");
+  }
+  try {
+    const hash = await helpers.walletClient.writeContract({
+      address: ADDRESSES.mockOracle,
+      abi: mockOracleAbi,
+      functionName: "pushReading",
+      args: [locationId, rainfall, riverLevel, soilMoisture],
+      account: helpers.walletClient.account,
+      chain: { id: CHAIN_ID },
+    });
+    await getClient().waitForTransactionReceipt({ hash });
+    notify();
+    return { txHash: hash };
+  } catch (error) {
+    const decoded = decodeContractError(error);
+    throw new ChainGuardError(decoded.message, decoded.code);
+  }
+}
+
 function statusFromCode(code: number): PolicyStatus {
   if (code === 1) return "Claimed";
   if (code === 2) return "Expired";
