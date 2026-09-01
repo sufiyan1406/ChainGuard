@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShieldCheck, Waves, Clock, CheckCircle2, ChevronDown, Radio, ExternalLink } from "lucide-react";
 import { RiskScoreGauge } from "@/components/RiskScoreGauge";
@@ -191,6 +192,15 @@ export function PolicyCard({
                   <p className="label text-dark-muted text-[10px]">CHAIN STATUS</p>
                   <p className="mt-1 text-dark-fg">Arbitrum Sepolia #421614</p>
                 </div>
+              </div>
+              <div className="mt-3 pt-3 border-t border-dark-2 flex justify-end">
+                <Link
+                  to="/audit"
+                  className="inline-flex items-center gap-1 font-mono text-xs text-mint hover:underline"
+                >
+                  <span>Open Cryptographic Audit Log</span>
+                  <ExternalLink className="size-3" />
+                </Link>
               </div>
             </motion.div>
           )}

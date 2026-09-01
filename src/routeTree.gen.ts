@@ -10,12 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuditRouteImport } from './routes/audit'
 import { Route as PoliciesRouteImport } from './routes/policies'
 import { Route as ProtocolRouteImport } from './routes/protocol'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuditRoute = AuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PoliciesRoute = PoliciesRouteImport.update({
@@ -31,30 +37,34 @@ const ProtocolRoute = ProtocolRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/audit': typeof AuditRoute
   '/policies': typeof PoliciesRoute
   '/protocol': typeof ProtocolRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/audit': typeof AuditRoute
   '/policies': typeof PoliciesRoute
   '/protocol': typeof ProtocolRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/audit': typeof AuditRoute
   '/policies': typeof PoliciesRoute
   '/protocol': typeof ProtocolRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/policies' | '/protocol'
+  fullPaths: '/' | '/audit' | '/policies' | '/protocol'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/policies' | '/protocol'
-  id: '__root__' | '/' | '/policies' | '/protocol'
+  to: '/' | '/audit' | '/policies' | '/protocol'
+  id: '__root__' | '/' | '/audit' | '/policies' | '/protocol'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuditRoute: typeof AuditRoute
   PoliciesRoute: typeof PoliciesRoute
   ProtocolRoute: typeof ProtocolRoute
 }
@@ -66,6 +76,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/audit': {
+      id: '/audit'
+      path: '/audit'
+      fullPath: '/audit'
+      preLoaderRoute: typeof AuditRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/policies': {
@@ -87,6 +104,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuditRoute: AuditRoute,
   PoliciesRoute: PoliciesRoute,
   ProtocolRoute: ProtocolRoute,
 }
