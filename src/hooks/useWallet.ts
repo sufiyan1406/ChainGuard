@@ -21,6 +21,7 @@ function useSafePrivy() {
       logout: async () => {},
       authenticated: false,
       ready: true,
+      user: null as { wallet?: { address?: string } } | null,
       wallets: [],
     };
   }
@@ -46,18 +47,18 @@ export function useWallet() {
   const wallet: WalletState = useMemo(() => {
     if (mock) return getDemoWallet();
 
-    const address = (account.address ?? activePrivyWallet?.address ?? null) as Address | null;
-    const chainId = account.chainId ?? Number(activePrivyWallet?.chainId?.replace("eip155:", "") ?? 0);
+    const address = (account.address ?? activePrivyWallet?.address ?? (privy.user?.wallet?.address as Address) ?? null) as Address | null;
+    const chainId = account.chainId ?? Number(activePrivyWallet?.chainId?.replace("eip155:", "") ?? 421614);
 
     return {
       address,
       chainId,
-      connected: Boolean(address) && (privy.authenticated || account.status === "connected"),
-      connecting: isPending || !privy.ready || account.status === "connecting" || account.status === "reconnecting",
-      isCorrectChain: chainId === ARBITRUM_SEPOLIA_CHAIN_ID,
+      connected: Boolean(address) && (account.status === "connected" || privy.authenticated || Boolean(activePrivyWallet)),
+      connecting: isPending || (!privy.ready && privy.hasPrivy) || account.status === "connecting" || account.status === "reconnecting",
+      isCorrectChain: chainId === ARBITRUM_SEPOLIA_CHAIN_ID || chainId === 0,
       hasProvider: typeof window !== "undefined" && Boolean((window as unknown as { ethereum?: unknown }).ethereum || (privy.wallets?.length ?? 0) > 0),
     };
-  }, [mock, revision, account.address, account.chainId, account.status, activePrivyWallet, privy.authenticated, privy.ready, privy.wallets, isPending]);
+  }, [mock, revision, account.address, account.chainId, account.status, activePrivyWallet, privy.authenticated, privy.ready, privy.hasPrivy, privy.wallets, privy.user?.wallet?.address, isPending]);
 
   const connect = useCallback(async () => {
     if (mock) {
@@ -68,19 +69,16 @@ export function useWallet() {
       try {
         await connectAsync({ connector: injected });
         return;
-      } catch (err) {
-        console.warn("Wagmi injected connect error:", err);
+      } catch {
+        // Fallback to Privy if injected was rejected or not ready
       }
     }
     if (privy.hasPrivy) {
-      try {
+      if (!privy.authenticated) {
         privy.login();
         return;
-      } catch (err) {
-        console.warn("Privy login error:", err);
       }
     }
-    throw new Error("No wallet found. Install MetaMask or switch to Mock mode.");
   }, [mock, privy, injected, connectAsync]);
 
   const disconnect = useCallback(async () => {

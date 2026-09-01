@@ -137,17 +137,27 @@ export async function quotePremium(
 ): Promise<bigint> {
   if (isMockMode()) return quotePremiumMock(locationId, coverageAmount);
 
+  const loc = getLocation(locationId);
+  const tableBps = BigInt(loc?.basePremiumBps ?? 420);
+
   // If RiskEngine is deployed on-chain, query live pricing
   if (ADDRESSES.riskEngine) {
     try {
-      const bps = (await getClient().readContract({
+      const res = (await getClient().readContract({
         address: ADDRESSES.riskEngine,
         abi: riskEngineAbi,
         functionName: "pricePremium",
         args: [locationId],
       })) as bigint;
-      if (typeof bps === "bigint" && bps > 0n) {
-        return (coverageAmount * bps) / 10000n;
+      if (typeof res === "bigint" && res > 0n) {
+        // If contract returns basis points (e.g. 420 = 4.2%)
+        if (res <= 10000n) {
+          return (coverageAmount * res) / 10000n;
+        }
+        // If contract returns 1e18 scale percentage
+        if (res >= 10n ** 14n && res <= 10n ** 18n) {
+          return (coverageAmount * res) / (10n ** 18n);
+        }
       }
     } catch {
       // Contract not yet deployed or returned empty data (0x) - fallback to location table
@@ -155,9 +165,7 @@ export async function quotePremium(
   }
 
   // Fallback calculation from verified location matrix
-  const loc = getLocation(locationId);
-  const bps = BigInt(loc?.basePremiumBps ?? 400);
-  return (coverageAmount * bps) / 10000n;
+  return (coverageAmount * tableBps) / 10000n;
 }
 
 export async function buyPolicy(
@@ -181,6 +189,10 @@ export async function buyPolicy(
   }
   try {
     const premium = await quotePremium(locationId, coverageAmount);
+    // Fetch current gas price to avoid "maxFeePerGas < baseFee" on Arbitrum Sepolia
+    const block = await getClient().getBlock();
+    const baseFee = block.baseFeePerGas ?? 200000000n;
+    const maxFee = baseFee * 3n; // 3x headroom for L2 fee spikes
     const hash = await helpers.walletClient.writeContract({
       address: ADDRESSES.insurancePool,
       abi: insurancePoolAbi,
@@ -189,6 +201,8 @@ export async function buyPolicy(
       value: premium,
       account: helpers.walletClient.account,
       chain: { id: CHAIN_ID },
+      maxFeePerGas: maxFee,
+      maxPriorityFeePerGas: maxFee / 10n,
     });
     const receipt = await getClient().waitForTransactionReceipt({ hash });
     let policyId = 0n;
@@ -206,6 +220,7 @@ export async function buyPolicy(
         /* skip unrelated logs */
       }
     }
+    notify(); // trigger usePolicies refresh
     return { policyId, txHash: hash, premium };
   } catch (error) {
     const decoded = decodeContractError(error);
@@ -223,10 +238,15 @@ export async function getPolicies(holder: Address): Promise<Policy[]> {
       functionName: "getPoliciesByOwner",
       args: [holder],
     })) as readonly bigint[];
-    const policies = await Promise.all(ids.map((id) => getPolicy(id)));
+    const results = await Promise.allSettled(ids.map((id) => getPolicy(id)));
+    const policies: Policy[] = [];
+    for (const r of results) {
+      if (r.status === "fulfilled") policies.push(r.value);
+      else console.warn("[ChainGuard] Failed to fetch policy:", r.reason);
+    }
     return policies.sort((a, b) => Number(b.purchasedAt - a.purchasedAt));
-  } catch {
-    // Return empty list if address has no bytecode yet
+  } catch (err) {
+    console.warn("[ChainGuard] getPolicies failed for", holder, err);
     return [];
   }
 }
@@ -264,6 +284,7 @@ export async function getPolicy(policyId: bigint): Promise<Policy> {
       payoutAmount: raw.claimed ? raw.coverageAmount : 0n,
     };
   } catch (error) {
+    console.warn("[ChainGuard] getPolicy failed for ID", policyId.toString(), error);
     const decoded = decodeContractError(error);
     throw new ChainGuardError(decoded.message, decoded.code);
   }
@@ -304,8 +325,9 @@ export async function getRiskScore(locationId: bigint): Promise<RiskReading> {
         riverLevel = reading.riverLevel;
         soilMoisture = reading.soilMoisture;
         updatedAt = reading.timestamp;
-      } catch {
-        /* fallback if no oracle reading exists */
+        console.log(`[ChainGuard] Oracle reading for location ${locationId}: rainfall=${rainfall}, river=${riverLevel}, soil=${soilMoisture}, ts=${updatedAt}`);
+      } catch (oracleErr) {
+        console.warn("[ChainGuard] Oracle read failed for location", locationId.toString(), oracleErr);
       }
     }
 
@@ -322,8 +344,15 @@ export async function getRiskScore(locationId: bigint): Promise<RiskReading> {
           ],
         })) as number;
         riskScore = Math.round(Number(rawScore) / 100);
-      } catch {
-        riskScore = 0;
+        console.log(`[ChainGuard] RiskEngine score for location ${locationId}: raw=${rawScore}, final=${riskScore}`);
+      } catch (riskErr) {
+        console.warn("[ChainGuard] RiskEngine failed for location", locationId.toString(), riskErr);
+        // Fallback: compute a simple weighted average client-side
+        const r = Number(rainfall);
+        const rv = Number(riverLevel);
+        const s = Number(soilMoisture);
+        riskScore = Math.round(r * 0.4 + rv * 0.35 + s * 0.25);
+        console.log(`[ChainGuard] Using client-side fallback score: ${riskScore}`);
       }
     }
 

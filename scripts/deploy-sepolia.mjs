@@ -1,5 +1,6 @@
 import { createWalletClient, createPublicClient, http, defineChain } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
+import solc from "solc";
 import * as fs from "fs";
 import * as path from "path";
 import { fileURLToPath } from "url";
@@ -41,6 +42,63 @@ function loadEnv() {
   return env;
 }
 
+function compileContracts() {
+  console.log("⚙️ Compiling Solidity smart contracts with solc...");
+  const srcDir = path.join(rootDir, "backend", "contracts", "solidity", "src");
+
+  const sources = {
+    "Errors.sol": { content: fs.readFileSync(path.join(srcDir, "Errors.sol"), "utf-8") },
+    "interfaces/IRiskEngine.sol": { content: fs.readFileSync(path.join(srcDir, "interfaces", "IRiskEngine.sol"), "utf-8") },
+    "MockOracle.sol": { content: fs.readFileSync(path.join(srcDir, "MockOracle.sol"), "utf-8") },
+    "PolicyNFT.sol": { content: fs.readFileSync(path.join(srcDir, "PolicyNFT.sol"), "utf-8") },
+    "SolidityRiskEngine.sol": { content: fs.readFileSync(path.join(srcDir, "SolidityRiskEngine.sol"), "utf-8") },
+    "InsurancePool.sol": { content: fs.readFileSync(path.join(srcDir, "InsurancePool.sol"), "utf-8") },
+  };
+
+  const input = {
+    language: "Solidity",
+    sources,
+    settings: {
+      optimizer: { enabled: true, runs: 200 },
+      outputSelection: {
+        "*": {
+          "*": ["abi", "evm.bytecode.object"],
+        },
+      },
+    },
+  };
+
+  const output = JSON.parse(solc.compile(JSON.stringify(input)));
+
+  if (output.errors) {
+    for (const err of output.errors) {
+      if (err.severity === "error") {
+        console.error(err.formattedMessage);
+        throw new Error("Solidity compilation failed.");
+      }
+    }
+  }
+
+  return {
+    MockOracle: {
+      abi: output.contracts["MockOracle.sol"]["MockOracle"].abi,
+      bytecode: `0x${output.contracts["MockOracle.sol"]["MockOracle"].evm.bytecode.object}`,
+    },
+    PolicyNFT: {
+      abi: output.contracts["PolicyNFT.sol"]["PolicyNFT"].abi,
+      bytecode: `0x${output.contracts["PolicyNFT.sol"]["PolicyNFT"].evm.bytecode.object}`,
+    },
+    SolidityRiskEngine: {
+      abi: output.contracts["SolidityRiskEngine.sol"]["SolidityRiskEngine"].abi,
+      bytecode: `0x${output.contracts["SolidityRiskEngine.sol"]["SolidityRiskEngine"].evm.bytecode.object}`,
+    },
+    InsurancePool: {
+      abi: output.contracts["InsurancePool.sol"]["InsurancePool"].abi,
+      bytecode: `0x${output.contracts["InsurancePool.sol"]["InsurancePool"].evm.bytecode.object}`,
+    },
+  };
+}
+
 async function main() {
   const env = loadEnv();
   const rawKey = env.PRIVATE_KEY || process.env.PRIVATE_KEY;
@@ -79,27 +137,13 @@ async function main() {
     process.exit(1);
   }
 
-  // Load compiled artifacts
-  const outDir = path.join(rootDir, "backend", "contracts", "solidity", "out");
-  const loadArtifact = (name) => {
-    const p = path.join(outDir, `${name}.sol`, `${name}.json`);
-    const json = JSON.parse(fs.readFileSync(p, "utf-8"));
-    return {
-      abi: json.abi,
-      bytecode: json.bytecode.object,
-    };
-  };
-
-  const mockOracleArtifact = loadArtifact("MockOracle");
-  const policyNFTArtifact = loadArtifact("PolicyNFT");
-  const riskEngineArtifact = loadArtifact("SolidityRiskEngine");
-  const insurancePoolArtifact = loadArtifact("InsurancePool");
+  const compiled = compileContracts();
 
   // 1. Deploy MockOracle
   console.log("1️⃣ Deploying MockOracle...");
   const oracleHash = await walletClient.deployContract({
-    abi: mockOracleArtifact.abi,
-    bytecode: mockOracleArtifact.bytecode,
+    abi: compiled.MockOracle.abi,
+    bytecode: compiled.MockOracle.bytecode,
   });
   const oracleReceipt = await publicClient.waitForTransactionReceipt({ hash: oracleHash });
   const mockOracleAddress = oracleReceipt.contractAddress;
@@ -108,18 +152,18 @@ async function main() {
   // 2. Deploy PolicyNFT
   console.log("2️⃣ Deploying PolicyNFT...");
   const nftHash = await walletClient.deployContract({
-    abi: policyNFTArtifact.abi,
-    bytecode: policyNFTArtifact.bytecode,
+    abi: compiled.PolicyNFT.abi,
+    bytecode: compiled.PolicyNFT.bytecode,
   });
   const nftReceipt = await publicClient.waitForTransactionReceipt({ hash: nftHash });
   const policyNFTAddress = nftReceipt.contractAddress;
   console.log(`   ✅ PolicyNFT: ${policyNFTAddress}`);
 
   // 3. Deploy SolidityRiskEngine
-  console.log("3️⃣ Deploying SolidityRiskEngine...");
+  console.log("3️⃣ Deploying SolidityRiskEngine (with BPS rates)...");
   const engineHash = await walletClient.deployContract({
-    abi: riskEngineArtifact.abi,
-    bytecode: riskEngineArtifact.bytecode,
+    abi: compiled.SolidityRiskEngine.abi,
+    bytecode: compiled.SolidityRiskEngine.bytecode,
   });
   const engineReceipt = await publicClient.waitForTransactionReceipt({ hash: engineHash });
   const riskEngineAddress = engineReceipt.contractAddress;
@@ -128,8 +172,8 @@ async function main() {
   // 4. Deploy InsurancePool
   console.log("4️⃣ Deploying InsurancePool...");
   const poolHash = await walletClient.deployContract({
-    abi: insurancePoolArtifact.abi,
-    bytecode: insurancePoolArtifact.bytecode,
+    abi: compiled.InsurancePool.abi,
+    bytecode: compiled.InsurancePool.bytecode,
     args: [policyNFTAddress, riskEngineAddress],
   });
   const poolReceipt = await publicClient.waitForTransactionReceipt({ hash: poolHash });
@@ -140,7 +184,7 @@ async function main() {
   console.log("5️⃣ Authorizing InsurancePool in PolicyNFT...");
   const authHash = await walletClient.writeContract({
     address: policyNFTAddress,
-    abi: policyNFTArtifact.abi,
+    abi: compiled.PolicyNFT.abi,
     functionName: "setInsurancePool",
     args: [insurancePoolAddress],
   });

@@ -40,6 +40,12 @@ export const Route = createRootRoute({
       },
     ],
   }),
+  notFoundComponent: () => (
+    <div className="container py-24 text-center font-mono">
+      <p className="text-4xl font-bold text-ink">404</p>
+      <p className="mt-2 text-ink-muted">Route Not Found</p>
+    </div>
+  ),
   component: RootLayout,
 });
 

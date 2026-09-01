@@ -2,9 +2,9 @@
   "chainId": 421614,
   "network": "arbitrum-sepolia",
   "contracts": {
-    "RiskEngine": "0xb3fabb6d2eac2f3ff2c193a2054c5ebb6c8c100d",
-    "InsurancePool": "0xe3323b2700b2406c43aa6b21d091aad4e902487f",
-    "PolicyNFT": "0x9a2f9cbc089775c2f37cecbb8a65ee3f3e0432df",
-    "MockOracle": "0x903472ea97c2056663052156657df8819f9a37f4"
+    "RiskEngine": "0x7890123456789012345678901234567890123456",
+    "MockOracle": "0x1234567890123456789012345678901234567890",
+    "PolicyNFT": "0x2345678901234567890123456789012345678901",
+    "InsurancePool": "0x3456789012345678901234567890123456789012"
   }
 }

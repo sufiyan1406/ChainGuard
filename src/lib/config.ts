@@ -24,12 +24,12 @@ export function isValidPrivyAppId(id: string | undefined): boolean {
   return /^[a-z0-9_-]{20,50}$/i.test(id);
 }
 
-// Fallback deployed contracts registry from Arbitrum Sepolia deployment
+// Live deployed contracts registry on Arbitrum Sepolia
 const DEFAULT_DEPLOYED_CONTRACTS = {
-  RiskEngine: "0x7890123456789012345678901234567890123456",
-  MockOracle: "0x1234567890123456789012345678901234567890",
-  PolicyNFT: "0x2345678901234567890123456789012345678901",
-  InsurancePool: "0x3456789012345678901234567890123456789012",
+  RiskEngine: "0x946358e31014888e24d0d10fa6dcb63aa78f7599",
+  InsurancePool: "0x46c77203efabe8a7a034e7f03d2f0bc68fb32a6f",
+  PolicyNFT: "0xe849d1aad65788d9f89ba0c79d0d1e80ed076ea1",
+  MockOracle: "0x30d2cb4f73d12cac62caf06bcdbbc98f4bc6331b",
 };
 
 export const ADDRESSES = {
