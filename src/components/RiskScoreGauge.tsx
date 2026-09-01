@@ -1,3 +1,5 @@
+import { motion } from "framer-motion";
+import { NumberRoll } from "@/components/motion/NumberRoll";
 import { riskBand, riskLabel } from "@/lib/format";
 import { RISK_PAYOUT_THRESHOLD } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -19,14 +21,14 @@ export function RiskScoreGauge({
       <div className="flex items-end justify-between gap-4">
         <div>
           {label ? <p className="label mb-2">{label}</p> : null}
-          <p
+          <div
             className={cn(
               "font-display leading-none tabular-nums text-ink",
               compact ? "text-5xl" : "text-7xl md:text-8xl",
             )}
           >
-            {clamped.toString().padStart(2, "0")}
-          </p>
+            <NumberRoll value={clamped} pad={2} />
+          </div>
         </div>
         <div className="pb-1 text-right">
           <p
@@ -44,17 +46,34 @@ export function RiskScoreGauge({
       </div>
 
       <div className="relative h-2 w-full bg-paper-2">
-        <div
+        <motion.div
           className={cn(
-            "h-full transition-[width] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
+            "h-full",
             band === "trigger" ? "bg-rose" : "bg-ink",
           )}
-          style={{ width: `${clamped}%` }}
+          initial={{ width: "0%" }}
+          animate={{ width: `${clamped}%` }}
+          transition={{
+            type: "spring",
+            stiffness: 120,
+            damping: 18,
+            mass: 0.8,
+          }}
         />
-        <span
+        <motion.span
           className="absolute top-0 h-2 w-px bg-rose"
           style={{ left: `${RISK_PAYOUT_THRESHOLD}%` }}
           aria-hidden
+          animate={
+            clamped >= 70
+              ? { opacity: [0.4, 1, 0.4], scale: [1, 1.5, 1] }
+              : { opacity: 1, scale: 1 }
+          }
+          transition={
+            clamped >= 70
+              ? { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
+              : {}
+          }
         />
       </div>
 

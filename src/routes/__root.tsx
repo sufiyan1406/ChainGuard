@@ -5,6 +5,7 @@ import { AppProviders } from "@/components/Providers";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { PayoutToast } from "@/components/PayoutToast";
+import { IntroSequence } from "@/components/motion/IntroSequence";
 import appCss from "../styles.css?url";
 
 const APP_NAME = "ChainGuard";
@@ -50,6 +51,7 @@ function RootLayout() {
       </head>
       <body className="min-h-screen bg-paper text-ink">
         <PreviewHostBridge />
+        <IntroSequence />
         <AuthProvider>
           <AppProviders>
             <div className="flex min-h-screen flex-col">
