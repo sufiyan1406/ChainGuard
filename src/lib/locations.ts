@@ -56,6 +56,22 @@ export const LOCATIONS: Location[] = [
     basePremiumBps: 340,
     description: "Chao Phraya basin with seasonal monsoon surge.",
   },
+  {
+    id: 7n,
+    name: "Assam",
+    region: "India",
+    hazard: "Flood",
+    basePremiumBps: 450,
+    description: "Brahmaputra river valley with severe monsoon flooding.",
+  },
+  {
+    id: 8n,
+    name: "Gujarat",
+    region: "India",
+    hazard: "Flood",
+    basePremiumBps: 400,
+    description: "Coastal and riverine regions prone to cyclonic storm surges.",
+  },
 ];
 
 export function getLocation(id: bigint): Location | undefined {
