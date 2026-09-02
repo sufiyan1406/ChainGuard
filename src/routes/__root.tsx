@@ -39,6 +39,24 @@ export const Route = createRootRoute({
         href: "https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap",
       },
     ],
+    scripts: [
+      {
+        type: "text/javascript",
+        children: `
+          function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+              pageLanguage: 'en',
+              includedLanguages: 'en,hi,bn,te,mr,ta,ur,gu,kn,ml,or,pa,as,sa,ne,ks',
+              autoDisplay: false
+            }, 'google_translate_element');
+          }
+        `,
+      },
+      {
+        type: "text/javascript",
+        src: "https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit",
+      }
+    ],
   }),
   notFoundComponent: () => (
     <div className="container py-24 text-center font-mono">
@@ -56,6 +74,7 @@ function RootLayout() {
         <HeadContent />
       </head>
       <body className="min-h-screen bg-paper text-ink">
+        <div id="google_translate_element"></div>
         <PreviewHostBridge />
         <IntroSequence />
         <AuthProvider>
