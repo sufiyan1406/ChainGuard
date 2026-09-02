@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useMemo, type MouseEvent, type ReactNode } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { isIntroDone, onIntroDone } from "./IntroSequence";
+import { isIntroDone, onIntroDone } from "@/lib/introState";
 
 interface PixelParallaxImageProps {
   src: string;

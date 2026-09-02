@@ -1,32 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence, useMotionValue, animate } from "framer-motion";
 import { ScrambleText } from "./ScrambleText";
-
-/**
- * Global signal: other components can subscribe to know when the intro is done.
- * This avoids prop-drilling or context for a one-shot event.
- */
-let introDone = false;
-const introDoneListeners = new Set<() => void>();
-
-export function isIntroDone(): boolean {
-  return introDone;
-}
-
-export function onIntroDone(cb: () => void): () => void {
-  if (introDone) {
-    cb();
-    return () => {};
-  }
-  introDoneListeners.add(cb);
-  return () => introDoneListeners.delete(cb);
-}
-
-function markIntroDone() {
-  introDone = true;
-  introDoneListeners.forEach((cb) => cb());
-  introDoneListeners.clear();
-}
+import { markIntroDone } from "@/lib/introState";
 
 export function IntroSequence() {
   const [complete, setComplete] = useState(false);
