@@ -7,6 +7,7 @@ import { clockLabel } from "@/lib/format";
 import { canUseLiveMode, isMockMode, setMockMode } from "@/lib/contracts";
 import { useContractRevision } from "@/hooks/useContractRevision";
 import { cn } from "@/lib/utils";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 const NAV = [
   { to: "/", label: "Cover" },
@@ -74,6 +75,7 @@ export function SiteHeader() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.8 }}
         >
+          <LanguageSwitcher />
           <ModeSwitch mock={mock} />
           <WalletConnect compact />
         </motion.div>
