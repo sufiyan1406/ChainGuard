@@ -1,29 +1,62 @@
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence, useMotionValue, animate } from "framer-motion";
 import { ScrambleText } from "./ScrambleText";
 
+/**
+ * Global signal: other components can subscribe to know when the intro is done.
+ * This avoids prop-drilling or context for a one-shot event.
+ */
+let introDone = false;
+const introDoneListeners = new Set<() => void>();
+
+export function isIntroDone(): boolean {
+  return introDone;
+}
+
+export function onIntroDone(cb: () => void): () => void {
+  if (introDone) {
+    cb();
+    return () => {};
+  }
+  introDoneListeners.add(cb);
+  return () => introDoneListeners.delete(cb);
+}
+
+function markIntroDone() {
+  introDone = true;
+  introDoneListeners.forEach((cb) => cb());
+  introDoneListeners.clear();
+}
+
 export function IntroSequence() {
-  const [percent, setPercent] = useState(0);
   const [complete, setComplete] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
-  useEffect(() => {
-    // Fast, smooth counter from 0 to 100% over ~900ms
-    let current = 0;
-    const interval = setInterval(() => {
-      current += Math.floor(Math.random() * 14) + 6;
-      if (current >= 100) {
-        current = 100;
-        setPercent(100);
-        clearInterval(interval);
-        setTimeout(() => setComplete(true), 250);
-        setTimeout(() => setDismissed(true), 800);
-      } else {
-        setPercent(current);
-      }
-    }, 45);
+  // Smooth progress via motion value
+  const progress = useMotionValue(0);
+  const [displayPercent, setDisplayPercent] = useState(0);
 
-    return () => clearInterval(interval);
+  // Single smooth animation from 0→100 over ~1.1s
+  useEffect(() => {
+    const unsub = progress.on("change", (v) => setDisplayPercent(Math.round(v)));
+    const controls = animate(progress, 100, {
+      duration: 1.1,
+      ease: [0.25, 0.46, 0.45, 0.94],
+      onComplete: () => {
+        setTimeout(() => setComplete(true), 200);
+        setTimeout(() => {
+          setDismissed(true);
+          markIntroDone();
+        }, 850);
+      },
+    });
+    return () => { controls.stop(); unsub(); };
+  }, [progress]);
+
+  const handleSkip = useCallback(() => {
+    setComplete(true);
+    setDismissed(true);
+    markIntroDone();
   }, []);
 
   if (dismissed) return null;
@@ -33,16 +66,14 @@ export function IntroSequence() {
       {!complete && (
         <motion.div
           key="intro-curtain"
-          onClick={() => {
-            setComplete(true);
-            setDismissed(true);
-          }}
+          onClick={handleSkip}
           initial={{ opacity: 1, y: "0%" }}
           exit={{
             y: "-100%",
-            transition: { duration: 0.65, ease: [0.76, 0, 0.24, 1] },
+            transition: { duration: 0.6, ease: [0.76, 0, 0.24, 1] },
           }}
           className="fixed inset-0 z-[99999] flex flex-col justify-between bg-dark p-6 md:p-12 text-dark-fg cursor-pointer select-none overflow-hidden"
+          style={{ willChange: "transform" }}
         >
           {/* Subtle noise grain texture */}
           <div className="intro-grain absolute inset-0 pointer-events-none opacity-40" />
@@ -76,16 +107,15 @@ export function IntroSequence() {
                 <span className="size-1.5 rounded-full bg-mint" /> INITIALIZING TELEMETRY ORACLES…
               </span>
               <span className="font-display text-4xl text-mint tabular-nums">
-                {percent.toString().padStart(3, "0")}%
+                {displayPercent.toString().padStart(3, "0")}%
               </span>
             </div>
 
-            {/* Razor-thin glowing progress bar */}
+            {/* Smooth continuous progress bar */}
             <div className="h-1 w-full bg-dark-2 rounded-full overflow-hidden">
               <motion.div
-                className="h-full bg-mint"
-                style={{ width: `${percent}%` }}
-                transition={{ ease: "easeOut" }}
+                className="h-full bg-mint rounded-full"
+                style={{ width: `${displayPercent}%`, willChange: "width" }}
               />
             </div>
 

@@ -7,6 +7,7 @@ import { SplitReveal } from "@/components/motion/SplitReveal";
 import { RevealOnScroll } from "@/components/motion/RevealOnScroll";
 import { MagneticButton } from "@/components/motion/MagneticButton";
 import { InteractiveTiltCard } from "@/components/motion/InteractiveTiltCard";
+import { PixelParallaxImage } from "@/components/motion/PixelParallaxImage";
 
 export const Route = createFileRoute("/")({ component: Home });
 
@@ -99,18 +100,18 @@ function Hero() {
         </div>
 
         <div className="grid min-h-[22rem] grid-cols-[1fr_4.5rem] grid-rows-[1fr_8.5rem] lg:min-h-[34rem]">
-          <motion.div
-            className="relative overflow-hidden bg-dark group"
-            initial={{ scale: 1.08, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 1.2, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          <PixelParallaxImage
+            src="/editorial/delta.jpg"
+            alt="Aerial river delta over a city grid"
+            className="size-full bg-dark"
+            imageClassName="opacity-85"
+            rows={8}
+            cols={12}
+            delay={0.15}
+            maxTilt={7}
+            parallaxStrength={15}
           >
-            <img
-              src="/editorial/delta.jpg"
-              alt="Aerial river delta over a city grid"
-              className="absolute inset-0 size-full object-cover opacity-85 transition-transform duration-700 group-hover:scale-105"
-            />
-            <div className="halftone-fine absolute inset-0 mix-blend-multiply" />
+            <div className="halftone-fine absolute inset-0 mix-blend-multiply pointer-events-none" />
             <div className="absolute top-4 left-4 flex items-center gap-1.5 bg-dark/80 backdrop-blur-md px-2.5 py-1 border border-dark-2">
               <span className="size-1.5 rounded-full bg-mint animate-ping" />
               <span className="font-mono text-[10px] text-paper">ORACLE SYNC: ACTIVE</span>
@@ -118,7 +119,8 @@ function Hero() {
             <p className="absolute bottom-4 left-4 font-mono text-[11px] tracking-widest text-paper uppercase">
               Jakarta basin · site 01
             </p>
-          </motion.div>
+          </PixelParallaxImage>
+
           <motion.div
             className="relative overflow-hidden bg-sage"
             aria-hidden
@@ -135,18 +137,16 @@ function Hero() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.6 }}
           />
-          <motion.div
-            className="relative overflow-hidden bg-dark group"
-            initial={{ scale: 1.08, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 1, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <img
-              src="/editorial/dusk.jpg"
-              alt="Still water at dusk"
-              className="absolute inset-0 size-full object-cover transition-transform duration-700 group-hover:scale-105"
-            />
-          </motion.div>
+          <PixelParallaxImage
+            src="/editorial/dusk.jpg"
+            alt="Still water at dusk"
+            className="size-full bg-dark"
+            rows={5}
+            cols={6}
+            delay={0.3}
+            maxTilt={6}
+            parallaxStrength={10}
+          />
         </div>
       </div>
 
@@ -180,18 +180,24 @@ function Hero() {
           <RevealOnScroll key={i} delay={i * 0.1}>
             {item.type === "image" ? (
               <div
-                className={`relative min-h-52 overflow-hidden border-b border-line sm:min-h-64 group ${
+                className={`relative min-h-52 overflow-hidden border-b border-line sm:min-h-64 ${
                   i === 0 ? "border-r" : i === 1 ? "lg:border-r" : ""
                 }`}
               >
-                <img
+                <PixelParallaxImage
                   src={item.src}
                   alt={item.alt}
-                  className="absolute inset-0 size-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-                <span className="absolute top-3 left-3 bg-dark/70 text-paper font-mono text-[9px] px-2 py-0.5 tracking-wider backdrop-blur-sm">
-                  {item.badge}
-                </span>
+                  className="size-full min-h-52 sm:min-h-64"
+                  rows={6}
+                  cols={8}
+                  delay={0.1 + i * 0.12}
+                  maxTilt={6}
+                  parallaxStrength={12}
+                >
+                  <span className="absolute top-3 left-3 bg-dark/70 text-paper font-mono text-[9px] px-2 py-0.5 tracking-wider backdrop-blur-sm border border-dark-2">
+                    {item.badge}
+                  </span>
+                </PixelParallaxImage>
               </div>
             ) : item.type === "dark" ? (
               <div className="flex min-h-52 flex-col justify-between border-b border-line bg-dark p-6 text-dark-fg sm:min-h-64 lg:border-r lg:border-b-0">
